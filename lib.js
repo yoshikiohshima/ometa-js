@@ -1,6 +1,6 @@
 // try to use StringBuffer instead of string concatenation to improve performance
 
-StringBuffer = function() {
+function StringBuffer() {
   this.strings = []
   for (var idx = 0; idx < arguments.length; idx++)
     this.nextPutAll(arguments[idx])
@@ -88,7 +88,7 @@ Array.prototype.delimWith = function(d) {
 
 // Squeak's ReadStream, kind of
 
-ReadStream = function(anArrayOrString) {
+function ReadStream(anArrayOrString) {
   this.src = anArrayOrString
   this.pos = 0
 }

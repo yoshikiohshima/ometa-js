@@ -1,11 +1,10 @@
 var fs = require('fs')
 
 function load(file) {
-    eval(fs.readFileSync(__dirname + "/" + file, 'utf8'))
+    this.eval(fs.readFileSync(__dirname + "/" + file, 'utf8'))
 }
 
 load("lib.js")
-
 load("ometa-base.js")
 load("parser.js")
 load("bs-js-compiler.js")
@@ -26,11 +25,11 @@ translateCode = function(s) {
 }
 
 function ometa(s) {
-   return eval(translateCode(s))
+   return this.eval(translateCode(s))
 }
 
 function loadOMeta(s) {
-   return eval(translateCode(fs.readFileSync(__dirname + "/" + s, 'utf8')))
+   return this.eval(translateCode(fs.readFileSync(__dirname + "/" + s, 'utf8')))
 }
 
 if (!(process.argv.length > 2)) {
@@ -41,4 +40,3 @@ if (!(process.argv.length > 2)) {
      load(process.argv[3])
    }
 }
-
