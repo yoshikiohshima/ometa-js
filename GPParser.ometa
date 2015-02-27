@@ -1,0 +1,28 @@
+ometa GPParser {
+   anyChar =
+	char:c ?{c != ";" && c != ")"
+	         && c != "}" && c.charCodeAt(0) > " ".charCodeAt(0)} -> c,
+   cmd :spacer =
+	(apply(spacer) value)+:rs apply(spacer) -> ["LIST"].concat(rs),
+   cmdList =
+	"{" nl? (cmd("noNL"):c (nl | &"}") -> c)*:cs "}" -> ["SEQ"].concat(cs),
+   nl = char:c ?{c == "\n" || c == "\r"}
+      | end,
+   noNL =
+	(char:c ?{c != "\n" && c != "\r" && c.charCodeAt(0) <= " ".charCodeAt(0)})*,
+ number =
+	< "-"? digit+ "." digit+ >:ds	-> ["CONST", parseFloat(ds)],
+
+  string =
+	"'" ((&("'" "'") char char -> "'") | ~"'" char)*:cs "'" -> ["CONST", "".concat.apply("", cs)],
+
+  symbol =
+	< anyChar+>:c -> ["SYMBOL", c],
+
+topLevelCmd =
+	cmd("noNL"):c noNL nl -> c,
+topLevelCmd2 =
+	cmd("noNL"):c noNL nl -> c[1],
+value =
+	number | string | ("(" cmd("spaces"):c ")" -> c) | cmdList | symbol
+};
