@@ -4,9 +4,9 @@ infixOp =
     ('+=' | '+' | '-' | '*' | '/' | '%' | '===' | '<<' | '>>>' | '>>' | '<=' | '<' | '==' | '!=' | '>=' | '>' | '&' | '|' | '^' | '='):c]
        -> c,
 name =
-  [('CONST' | 'SYMBOL') _:n ?[n.constructor == String]]	-> n
+  [('CONST' | 'SYMBOL') anything:n ?[n.constructor == String]]	-> n,
 trans =
-  ['LIST'
+  ['LIST'  
     (
       ['SYMBOL' 'to'] name:n name*:fs trans:b
       {['TO', n, fs, [], b]}:tmp
@@ -34,19 +34,18 @@ trans =
  	-> ['REPORTER', op, a, b]
     | name:n trans*:bs
         -> ['REPORTER', n].concat(bs)
-    | ['CONST', _:v]
+    | ['CONST' anything:v]
 	-> ['CONST', v]
     ):n
   ]
     -> n
-| ['STMTS' trans*:ss]
-   -> ['STMTS'].concat(ss)
+| ['SEQ' trans*:ss] -> ['SEQ'].concat(ss)
 | ['CONST' anything]
 | ['SYMBOL'
 		((('true' | 'else')		-> ['CONST', true]
-		|	'false'			-> ['CONST', false]
-		|	'nil'			-> ['CONST', nil]
+		  | 'false'			-> ['CONST', false]
+		  | 'nil'			-> ['CONST', nil]
 		):n
-		| _:v	 -> ['V', v]:n)
+		| anything:v	 {['V', v]}:n)
   ] -> n
 };

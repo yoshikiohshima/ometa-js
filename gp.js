@@ -15,7 +15,12 @@ var code = [
 
 var str = code.join("\n");
 
-console.log(JSON.stringify(GPParser.matchAll(str, "topLevelCmd")))
+var tree = GPParser.matchAll(str, "topLevelCmd");
+console.log(JSON.stringify(tree));
+
+var massaged = GPMassager.match(tree, "trans");
+console.log(JSON.stringify(massaged));
+
 
 
 

@@ -1,0 +1,16 @@
+ometa GPLocalVarFinder {
+start =
+   {this.result = {}}
+   ( ['TO' anything [name*:args] {this.args = args} anything findLocalVar]
+   | ['METHOD' anything anything [name*:args] {this.args = args} anything findLocalVar]
+   | ['FUNCTION' [name*:args] {this.args = args} anything findLocalVar]
+   )
+   -> Object.keys(this.result),
+name =
+   anything:n ?{n.constructor === String} -> n,
+findLocalVar =
+  ['V' anything:n] {if (this.args.indexOf(n) < 0) {this.result[n] = n}}
+| [anything findLocalVar*]
+| anything
+};
+
