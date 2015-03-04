@@ -13,17 +13,22 @@ var code = [
 "    if (el == element) { return true }",
 "  }",
 "  return false",
+"}",
+"method '-' Array element {//foo",
+" // bar",
+" // baz  azz",
+"  comment '",
+"	Return true if any element equals the input.'",
+"  for el this {",
+"    if (el == element) { return true }",
+"  }",
 "  return false",
-"}"]
+"}",
+]
 
 var str = code.join("\n");
 
-var tree = GPParser.matchAll(str, "start");
-console.log(JSON.stringify(tree));
+var tree = GPParser.matchAll(str, "file");
 
-var massaged = GPMassager.match(tree, "trans");
+var massaged = GPMassager.match(tree, "start");
 console.log(JSON.stringify(massaged));
-
-
-
-

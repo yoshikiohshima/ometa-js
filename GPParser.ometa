@@ -1,29 +1,35 @@
 ometa GPParser {
   anyChar =
     char:c ?{c != ";" && c != ")" && c != "}" && c > " "}	-> c,
+  sQuote = char:c ?{c == "'"},
   number = 
-    < noNL '-'? digit+ ('.' digit+)? >:ds			-> ["CONST", parseFloat(ds)],
+    < noNL '-'? digit+ ('.' digit+)? >:ds
+      -> ["CONST", parseFloat(ds)],
   string =
-    noNL "'" ((&("'" "'") char char -> "'") | ~"'" char)*:cs "'" -> ["CONST", cs.join("")],
+    noNL sQuote ((&(sQuote sQuote) char char -> "'") | ~sQuote char)*:cs sQuote
+      -> ["CONST", cs.join("")],
   symbol =
-    < anyChar+ >:c -> ["SYMBOL", c],
+    < anyChar+ >:c
+      -> ["SYMBOL", c],
   comment =
     '/' '/' (~nl anything)* &(nl | end),
   fComment =
-    spaces comment (nl | end),
+    (space | comment (nl | end))*,
   tComment =
-    noNL comment (nl | end),
+    noNL comment,
   reporter = 
-    spaces (fComment* spaces value)+:rs spaces -> ["LIST"].concat(rs),
+    (fComment value:v tComment? -> v)+:rs spaces -> ["LIST"].concat(rs),
   cmdNoNL =
-    (noNL value)+:rs -> ["LIST"].concat(rs),
+    (noNL value:v tComment? -> v)+:rs -> ["LIST"].concat(rs),
   cmdList =
-    noNL '{' (nl | tComment?)? (fComment* cmdNoNL:c noNL (nl | &'}') -> c)+:cs noNL '}' (tComment)? -> ["SEQ"].concat(cs),
+    noNL '{' (nl | tComment nl)? (fComment cmdNoNL:c noNL tComment? (nl | noNL &'}') -> c)+:cs noNL '}' tComment? -> ["SEQ"].concat(cs),
   value =
-    number | string | (spaces '(' reporter:c spaces ')' -> c) | cmdList | symbol,
+    number | string | (noNL '(' reporter:c spaces ')' -> c) | cmdList | symbol,
   nl = char:c ?{c == "\n" || c == "\r"},
   noNL =
     (char:c ?{c != "\n" && c != "\r" && c.charCodeAt(0) <= " ".charCodeAt(0)})*,
-  start =
-    cmdNoNL:c spaces tComment? spaces -> c
+  definition =
+    cmdNoNL:c spaces tComment? spaces -> c,
+  file = 
+    (fComment definition:d -> d)*:ds fComment -> ds
 };

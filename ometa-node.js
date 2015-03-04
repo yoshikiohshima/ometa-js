@@ -56,4 +56,3 @@ if (!(process.argv.length > 2)) {
 	    load(file)
     }
 }
-

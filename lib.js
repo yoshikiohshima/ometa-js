@@ -57,7 +57,7 @@ isImmutable = function(x) {
 
 String.prototype.digitValue  = function() { return this.charCodeAt(0) - "0".charCodeAt(0) }
 
-isSequenceable = function(x) { return typeof x == "string" || x.constructor === Array }
+isSequenceable = function(x) { return typeof x == "string" || (x && x.constructor === Array) }
 
 // some functional programming stuff
 

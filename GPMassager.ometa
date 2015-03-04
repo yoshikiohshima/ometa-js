@@ -1,53 +1,58 @@
 ometa GPMassager {
-infixOp =
-  ['SYMBOL'
-    ('+=' | '+' | '-' | '*' | '/' | '%' | '===' | '<<' | '>>>' | '>>' | '<=' | '<' | '==' | '!=' | '>=' | '>' | '&' | '|' | '^' | '='):c]
-       -> c,
-name =
-  [('CONST' | 'SYMBOL') anything:n ?[n.constructor == String]]	-> n,
-trans =
-  ['LIST'
-    (
-      ['SYMBOL' 'to'] name:n name*:fs trans:b
-      {['TO', n, fs, [], b]}:tmp
-      GPLocalVarFinder.start(tmp):locals
-        -> (function() {tmp[3] = locals; return tmp})()
-    | ['SYMBOL' 'method'] name:c name:n name*:fs trans:b
-      {['METHOD', c, n, fs, [], b]}:tmp
-      GPLocalVarFinder.start(tmp):locals
-        -> (function() {tmp[4] = locals; return tmp})()
-    | ['SYMBOL' 'function'] name*:fs trans:b
-      {['FUNCTION', fs, [], b]}:tmp
-      GPLocalVarFinder.start(tmp):locals
-        -> (function() {tmp[2] = locals; return tmp})()
-    | ['SYMBOL' 'defineClass'] name*:fs
-        -> ['CLASS', fs]
-    | ['SYMBOL' 'for'] name:n trans*:bs
-        -> ['FOR', n].concat(bs)
-    | ['SYMBOL' 'repeat'] trans:l trans:b
-        -> ['REPEAT', l, b]
-    | ['SYMBOL' 'while'] trans:l trans:b
-        -> ['WHILE', l, b]
-    | ['SYMBOL' 'if'] trans*:bs
-        -> ['IF'].concat(bs)
-    | name:n ['SYMBOL' ('=' | '+='):op] trans:b
-        -> ['SETVAR', n,  op, b]
-    | trans:a infixOp:op trans:b
- 	-> ['REPORTER', op, a, b]
-    | name:n trans*:bs
-        -> ['REPORTER', n].concat(bs)
-    | ['CONST' anything:v]
-	-> ['CONST', v]
+  infixOp =
+    ['SYMBOL'
+      ('+=' | '+' | '-' | '*' | '/' | '%' | '===' | '<<' | '>>>' | '>>' | '<=' | '<' | '==' | '!=' | '>=' | '>' | '&' | '|' | '^' | '='):c]
+      -> c,
+  name =
+    [('CONST' | 'SYMBOL') anything:n ?[n instanceof String]]  -> n,
+  trans =
+    ['LIST'
+      (
+        name:n ['SYMBOL' ('=' | '+='):op] trans:b
+          -> ['SETVAR', n,  op, b]
+      | ['SYMBOL' ('=' | '+='):op] name:n trans:b
+          -> ['SETVAR', n,  op, b]
+      | ['SYMBOL' 'to'] name:n name*:fs trans:b
+        {['TO', n, fs, [], b]}:tmp
+        GPLocalVarFinder.start(tmp):locals
+          -> (function() {tmp[3] = locals; return tmp})()
+      | ['SYMBOL' 'method'] name:c name:n name*:fs trans:b
+        
+        {['METHOD', c, n, fs, [], b]}:tmp
+        GPLocalVarFinder.start(tmp):locals
+         -> (function() {tmp[4] = locals; return tmp})()
+      | ['SYMBOL' 'function'] name*:fs trans:b
+        {['FUNCTION', fs, [], b]}:tmp
+        GPLocalVarFinder.start(tmp):locals
+          -> (function() {tmp[2] = locals; return tmp})()
+      | ['SYMBOL' 'defineClass'] name:c name*:fs
+          -> ['CLASS', c, fs]
+      | ['SYMBOL' 'for'] name:n trans*:bs
+          -> ['FOR', n].concat(bs)
+      | ['SYMBOL' 'repeat'] trans:l trans:b
+          -> ['REPEAT', l, b]
+      | ['SYMBOL' 'while'] trans:l trans:b
+          -> ['WHILE', l, b]
+      | ['SYMBOL' 'if'] trans*:bs
+          -> ['IF'].concat(bs)
+      | trans:a infixOp:op trans:b
+          -> ['REPORTER', op, a, b]
+      | name:n trans*:bs
+          -> ['REPORTER', n].concat(bs)
+      | ['CONST' anything:v]
+          -> ['CONST', v]
+      | &['LIST' anything*] trans
     ):n
   ]
     -> n
-| ['SEQ' trans*:ss] -> ['SEQ'].concat(ss)
-| ['CONST' anything]
-| ['SYMBOL'
-		((('true' | 'else')		-> ['CONST', true]
-		  | 'false'			-> ['CONST', false]
-		  | 'nil'			-> ['CONST', nil]
-		):n
-		| anything:v {['V', v]}:n)
-  ] -> n
+  | ['SEQ' trans*:ss] -> ['SEQ'].concat(ss)
+  | ['CONST' anything]
+  | ['SYMBOL'
+      ((('true' | 'else')           -> ['TRUE']
+      | 'false'                     -> ['FALSE']
+      | 'nil'                       -> ['NIL']
+      ):n
+      | anything:v {['V', v]}:n)
+    ] -> n,
+  start = [trans*:t] -> t
 };
