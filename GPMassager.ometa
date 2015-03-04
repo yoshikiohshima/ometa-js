@@ -6,7 +6,7 @@ infixOp =
 name =
   [('CONST' | 'SYMBOL') anything:n ?[n.constructor == String]]	-> n,
 trans =
-  ['LIST'  
+  ['LIST'
     (
       ['SYMBOL' 'to'] name:n name*:fs trans:b
       {['TO', n, fs, [], b]}:tmp
@@ -20,6 +20,8 @@ trans =
       {['FUNCTION', fs, [], b]}:tmp
       GPLocalVarFinder.start(tmp):locals
         -> (function() {tmp[2] = locals; return tmp})()
+    | ['SYMBOL' 'defineClass'] name*:fs
+        -> ['CLASS', fs]
     | ['SYMBOL' 'for'] name:n trans*:bs
         -> ['FOR', n].concat(bs)
     | ['SYMBOL' 'repeat'] trans:l trans:b
@@ -46,6 +48,6 @@ trans =
 		  | 'false'			-> ['CONST', false]
 		  | 'nil'			-> ['CONST', nil]
 		):n
-		| anything:v	 {['V', v]}:n)
+		| anything:v {['V', v]}:n)
   ] -> n
 };

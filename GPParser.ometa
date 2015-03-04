@@ -1,28 +1,29 @@
 ometa GPParser {
-   anyChar =
-	char:c ?{c != ";" && c != ")"
-	         && c != "}" && c.charCodeAt(0) > " ".charCodeAt(0)} -> c,
-   cmd :spacer =
-	(apply(spacer) value)+:rs apply(spacer) -> ["LIST"].concat(rs),
-   cmdList =
-	"{" nl? (cmd("noNL"):c (nl | &"}") -> c)*:cs "}" -> ["SEQ"].concat(cs),
-   nl = char:c ?{c == "\n" || c == "\r"}
-      | end,
-   noNL =
-	(char:c ?{c != "\n" && c != "\r" && c.charCodeAt(0) <= " ".charCodeAt(0)})*,
- number =
-	< "-"? digit+ "." digit+ >:ds	-> ["CONST", parseFloat(ds)],
-
+  anyChar =
+    char:c ?{c != ";" && c != ")" && c != "}" && c > " "}	-> c,
+  number = 
+    < noNL '-'? digit+ ('.' digit+)? >:ds			-> ["CONST", parseFloat(ds)],
   string =
-	"'" ((&("'" "'") char char -> "'") | ~"'" char)*:cs "'" -> ["CONST", "".concat.apply("", cs)],
-
+    noNL "'" ((&("'" "'") char char -> "'") | ~"'" char)*:cs "'" -> ["CONST", cs.join("")],
   symbol =
-	< anyChar+>:c -> ["SYMBOL", c],
-
-topLevelCmd =
-	cmd("noNL"):c noNL nl -> c,
-topLevelCmd2 =
-	cmd("noNL"):c noNL nl -> c[1],
-value =
-	number | string | ("(" cmd("spaces"):c ")" -> c) | cmdList | symbol
+    < anyChar+ >:c -> ["SYMBOL", c],
+  comment =
+    '/' '/' (~nl anything)* &(nl | end),
+  fComment =
+    spaces comment (nl | end),
+  tComment =
+    noNL comment (nl | end),
+  reporter = 
+    spaces (fComment* spaces value)+:rs spaces -> ["LIST"].concat(rs),
+  cmdNoNL =
+    (noNL value)+:rs -> ["LIST"].concat(rs),
+  cmdList =
+    noNL '{' (nl | tComment?)? (fComment* cmdNoNL:c noNL (nl | &'}') -> c)+:cs noNL '}' (tComment)? -> ["SEQ"].concat(cs),
+  value =
+    number | string | (spaces '(' reporter:c spaces ')' -> c) | cmdList | symbol,
+  nl = char:c ?{c == "\n" || c == "\r"},
+  noNL =
+    (char:c ?{c != "\n" && c != "\r" && c.charCodeAt(0) <= " ".charCodeAt(0)})*,
+  start =
+    cmdNoNL:c spaces tComment? spaces -> c
 };
