@@ -51,8 +51,9 @@ translateGPCode = function(s) {
 				    function(m, i) {
 					throw objectThatDelegatesTo(fail, {errorPos: i})
 				    });
-//    console.log(JSON.stringify(tree));
-    return GPMassager.match(tree, "start", undefined, translationError)
+    //console.log(JSON.stringify(tree));
+    return tree;
+    //return GPMassager.match(tree, "start", undefined, translationError)
 }
 
 function ometa(s) {
@@ -80,6 +81,7 @@ if (!(process.argv.length > 2)) {
 	} else if (file.match('.ometa$')) {
 	    loadOMeta(file)
         } else if (file.match('.gp$')) {
+            console.log(file);
 	    loadGP(file)
         } else {
 	    load(file)

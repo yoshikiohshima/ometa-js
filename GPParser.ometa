@@ -22,12 +22,12 @@ ometa GPParser {
   cmdNoNL =
     (noNL value:v tComment? -> v)+:rs -> ["LIST"].concat(rs),
   cmdList =
-    noNL '{' (nl | tComment nl)? (fComment cmdNoNL:c noNL tComment? (nl | noNL &'}') -> c)+:cs noNL '}' tComment? -> ["SEQ"].concat(cs),
+    noNL '{' (nl | tComment nl)? (fComment cmdNoNL:c noNL tComment? (nl | noNL &'}') -> c)+:cs noNL fComment '}' tComment? -> ["SEQ"].concat(cs),
   value =
     number | string | (noNL '(' reporter:c spaces ')' -> c) | cmdList | symbol,
   nl = char:c ?{c == "\n" || c == "\r"},
   noNL =
-    (char:c ?{c != "\n" && c != "\r" && c.charCodeAt(0) <= " ".charCodeAt(0)})*,
+    (char:c ?{c != "\n" && c != "\r" && c <= " "})*,
   definition =
     cmdNoNL:c spaces tComment? spaces -> c,
   file = 
